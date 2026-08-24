@@ -51,7 +51,7 @@ n read       # Might open README.md in batcat
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/Raiza04/Proj.git
    cd cnav
    ```
 
@@ -60,6 +60,7 @@ n read       # Might open README.md in batcat
    ```bash
    ./build.sh
    ```
+   Make sure the file is executable 
    *(Alternatively, you can manually create a build folder and run `cmake .. && make`)*
 
 ---
