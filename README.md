@@ -36,6 +36,13 @@ n main       # Might open src/main.c in vim
 n read       # Might open README.md in batcat
 ```
 
+### 3. Clean up the database
+To clean up the database form files that no longer exist because they were removed or for other reasons you can run the following command which you have to run manually. It is recommended to do this from time to time.
+
+```bash
+n --clean # This will clean the database from unavailable files
+```
+
 ---
 
 ## 🛠️ Prerequisites

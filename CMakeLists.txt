@@ -10,6 +10,7 @@ set(SOURCES
     src/add.c
     src/search.c
     src/init.c
+    src/clean.c
 )
 
 add_executable(n ${SOURCES})

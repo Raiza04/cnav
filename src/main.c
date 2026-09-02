@@ -1,6 +1,7 @@
 #include "main.h"
 
 void init(void);
+void clean_database(void);
 
 char *pathfinder(char* arr[], int arrSize){
     for (int i = 3; i < arrSize; i++)
@@ -21,6 +22,10 @@ int main(int argc, char* argv[]) {
             return EXIT_SUCCESS;
         }
 
+        if (strcmp(argv[1], "--clean") == 0) {
+            clean_database();
+            return EXIT_SUCCESS;
+        }
 
         entry result = search(argv[1]);
         
@@ -49,5 +54,6 @@ int main(int argc, char* argv[]) {
         }
 
     }
+
     return EXIT_SUCCESS;
 }
