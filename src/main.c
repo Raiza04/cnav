@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
+        add(result.path, result.program);
+
         if (execlp(result.program, result.program, result.path, (char *)NULL) == -1) {
             perror("Error opening file");
             exit(EXIT_FAILURE);
