@@ -1,53 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include <sqlite3.h>
+#include "platform.h"
 
-void clean_database() {
-    char *home = getenv("HOME");
-    if (home == NULL) return;
+void clean_database()
+{
+    char tmp[1024];
+    get_app_dir(tmp, sizeof(tmp));
 
-    char db_path[1024];
-    char tmp_path[1024];
-    snprintf(db_path, sizeof(db_path), "%s/.local/share/cnav/db.txt", home);
-    snprintf(tmp_path, sizeof(tmp_path), "%s/.local/share/cnav/tmp.txt", home);
+    char mydb[1048];
+    snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
 
-    FILE *db = fopen(db_path, "r");
-    if (db == NULL) {
-        printf("Database not found, nothing cleaned. \n");
+    sqlite3 *db;
+    if (sqlite3_open(mydb, &db) != SQLITE_OK)
+    {
+        printf("Database not found or could not be opened.\n");
         return;
     }
 
-    FILE *tmp = fopen(tmp_path, "w");
-    if (tmp == NULL) {
-        perror("Error with creating temporary database");
-        fclose(db);
+    const char *sql_select = "SELECT DISTINCT path FROM history;";
+    sqlite3_stmt *stmt_select;
+
+    const char *sql_delete = "DELETE FROM history WHERE path = ?;";
+    sqlite3_stmt *stmt_delete;
+
+    if (sqlite3_prepare_v2(db, sql_select, -1, &stmt_select, NULL) != SQLITE_OK)
+    {
+        sqlite3_close(db);
         return;
     }
 
-    char line[1024];
+    if (sqlite3_prepare_v2(db, sql_delete, -1, &stmt_delete, NULL) != SQLITE_OK)
+    {
+        sqlite3_finalize(stmt_select);
+        sqlite3_close(db);
+        return;
+    }
+
     int removed_count = 0;
 
-    while (fgets(line, sizeof(line), db) != NULL) {
-        char line_copy[1024];
-        strcpy(line_copy, line);
+    while (sqlite3_step(stmt_select) == SQLITE_ROW)
+    {
+        const char *path = (const char *)sqlite3_column_text(stmt_select, 0);
 
-        char *path = strtok(line_copy, ",");
-        
-        if (path != NULL) {
-            if (access(path, F_OK) == 0) {
-                fputs(line, tmp);
-            } else {
-                removed_count++;
-            }
+        if (!FILE_EXISTS(path))
+        {
+            sqlite3_bind_text(stmt_delete, 1, path, -1, SQLITE_TRANSIENT);
+
+            sqlite3_step(stmt_delete);
+
+            sqlite3_reset(stmt_delete);
+
+            removed_count++;
         }
     }
 
-    fclose(db);
-    fclose(tmp);
-
-    remove(db_path);
-    rename(tmp_path, db_path);
+    sqlite3_finalize(stmt_select);
+    sqlite3_finalize(stmt_delete);
+    sqlite3_close(db);
 
     printf("Cleanup finished! %d entries deleted.\n", removed_count);
 }

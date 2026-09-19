@@ -18,6 +18,4 @@ typedef struct
 
 entry search(char* wantedFile);
 bool checkStrings(const char* str1,const char* str2);
-int currLineNo(FILE* dbFile);
-entry findMax(entry* entryList, int listSize);
-double calcScore(int callNo, unsigned long long lastcall);
+double calcScore(int callNo, unsigned long long lastcall, int dist);

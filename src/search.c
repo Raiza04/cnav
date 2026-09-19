@@ -1,138 +1,190 @@
 #include "search.h"
+#include "platform.h"
+#include <sqlite3.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-entry search(char* wantedFile){
-    char *home = getenv("HOME");
-    if (home == NULL)
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define min3(a, b, c) min(a, min(b, c))
+
+double calcScore(int callNo, unsigned long long lastcall, int dist);
+int levenshtein(const char *str1, const char *str2);
+bool checkStrings(const char *str1, const char *str2);
+
+entry search(char *wantedFile)
+{
+
+    char cwd[1024];
+    if (GETCWD(cwd, sizeof(cwd)) == NULL)
     {
-        perror("Could not find the HOME directory");
-        exit(EXIT_FAILURE);        
+        perror("Error getting current directory\n");
+        cwd[0] = '\0';
     }
 
-    char dbPath[1024];
-    snprintf(dbPath, sizeof(dbPath), "%s/.local/share/cnav/db.txt", home);
+    entry result = {0}; // Leerer Fallback
 
-    FILE* mydb = fopen(dbPath, "r");
-    if (mydb == NULL)
+    char tmp[1024];
+    get_app_dir(tmp, sizeof(tmp));
+
+    char mydb[1048];
+    snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
+
+    sqlite3 *db;
+    if (sqlite3_open(mydb, &db) != SQLITE_OK)
     {
-        perror("Could not open the database");
-        exit(EXIT_FAILURE);
+        perror("Could not open the database for search\n");
+        sqlite3_close(db);
+        return result;
     }
 
-    entry* data = NULL;
+    // Wir lassen SQL grob vorfiltern: 'LIKE' ist case-insensitive und sucht Teilstrings
+    const char *sql = "SELECT path, name, program, callNo, lastCall FROM history; ";
 
-    char line[1024];
-    int i = 0;
-    while (fgets(line, sizeof(line), mydb) != NULL) {
-        char* linePath = strtok(line, ",");
-        char* lineName = strtok(NULL, ",");
-        
-        if (linePath == NULL || lineName == NULL) continue;;
-        
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        perror("Tabel <history> could not be prepared for operation\n");
+        sqlite3_close(db);
+        return result;
+    }
 
-        if (!checkStrings(lineName, wantedFile)) continue;
+    double maxScore = -1.0;
 
-        entry* tmpData = realloc(data, (i + 1) * sizeof(entry));
-        if (tmpData == NULL)
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        const char *path = (const char *)sqlite3_column_text(stmt, 0);
+        const char *name = (const char *)sqlite3_column_text(stmt, 1);
+        const char *program = (const char *)sqlite3_column_text(stmt, 2);
+        int callNo = sqlite3_column_int(stmt, 3);
+        unsigned long long lastCall = (unsigned long long)sqlite3_column_int64(stmt, 4);
+        int dist = 0;
+
+        if (!checkStrings(name, wantedFile))
         {
-            free(data);
-            perror("Error: realloc failed");
-            exit(EXIT_FAILURE);
+            dist = levenshtein(wantedFile, name);
+            int len_name = strlen(name);
+            int len_wanted = strlen(wantedFile);
+
+            int diff = len_name - len_wanted;
+            dist = dist - diff;
+
+            if (dist > 3)
+            {
+                continue;
+            }
         }
-        
-        data = tmpData;
 
-        char* lineProgram = strtok(NULL, ",");
-        char* lineCallNo = strtok(NULL, ",");
-        char* linelastCall = strtok(NULL, ",");
+        double currScore = calcScore(callNo, lastCall, dist);
 
-        if (lineCallNo == NULL || linelastCall == NULL || lineProgram == NULL) exit(EXIT_FAILURE);
+        size_t cwd_len = strlen(cwd);
 
-        strncpy(data[i].program, lineProgram, sizeof(data[i].program) - 1);
-        data[i].program[sizeof(data[i].program) - 1] = '\0';        
-        strncpy(data[i].path, linePath, sizeof(data[i].path) - 1);
-        data[i].path[sizeof(data[i].path) - 1] = '\0';
-        strncpy(data[i].name, lineName, sizeof(data[i].name) - 1);
-        data[i].name[sizeof(data[i].name) - 1] = '\0';
-        
-        data[i].callNo = atoi(lineCallNo);
-        data[i].lastCall = strtoull(linelastCall, NULL, 10);
+        if (strcmp(path, cwd) == 0)
+        {
+            if (path[cwd_len] == '/' || path[cwd_len] == '\\' || path[cwd_len] == '\0')
+            {
+                currScore *= 2.0;
+            }
+        }
 
-        i++;
+        if (currScore > maxScore)
+        {
+            maxScore = currScore;
+
+            // finalEntry überschreiben (ersetzt dein altes findMax)
+            strncpy(result.path, path, sizeof(result.path) - 1);
+            result.path[sizeof(result.path) - 1] = '\0';
+
+            strncpy(result.name, name, sizeof(result.name) - 1);
+            result.name[sizeof(result.name) - 1] = '\0';
+
+            strncpy(result.program, program, sizeof(result.program) - 1);
+            result.program[sizeof(result.program) - 1] = '\0';
+
+            result.callNo = callNo;
+            result.lastCall = lastCall;
+        }
     }
 
-    entry result = {0};
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
 
-    if (i > 0)
-    {
-        result = findMax(data, i);
-    }
-    
-
-    fclose(mydb);
-    free(data);
     return result;
 }
 
-bool checkStrings(const char* str1,const char* str2){
-    //The program will be case insensitiv
-    
-    if (str1 == NULL || str2 == NULL) return false;
-    
+double calcScore(int callNo, unsigned long long lastcall, int dist)
+{
+    unsigned long long deltaTime = (unsigned long long)time(NULL) - lastcall;
+    if (deltaTime == 0)
+        deltaTime = 1;
+
+    double penalty = (dist + 1.0) * (dist + 1.0);
+    double score = (double)callNo / ((double)deltaTime / 3600.0 + 1.0);
+    return score / penalty;
+}
+
+bool checkStrings(const char *str1, const char *str2)
+{
+    // The program will be case insensitiv
+
+    if (str1 == NULL || str2 == NULL)
+        return false;
+
     size_t len1 = strlen(str1);
-    size_t len2 = strlen(str2); 
-    if (len1 < len2) return false;
-    
-    if (str2[0] == '\0') return true;
+    size_t len2 = strlen(str2);
+    if (len1 < len2)
+        return false;
+
+    if (str2[0] == '\0')
+        return true;
 
     for (size_t i = 0; i < len1; i++)
     {
         size_t j = 0;
 
-        while (str1[i + j] != '\0' && tolower((unsigned char)str1[i+j]) == tolower((unsigned char)str2[j]))
+        while (str1[i + j] != '\0' && tolower((unsigned char)str1[i + j]) == tolower((unsigned char)str2[j]))
         {
             if (str2[++j] == '\0')
             {
                 return true;
             }
         }
-        
     }
     return false;
 }
 
-int currLineNo(FILE* dbFile){
-    int i = 0;
-    char ch;
-    while ((ch = fgetc(dbFile)) != EOF)
+int levenshtein(const char *str1, const char *str2)
+{
+    int n = strlen(str1);
+    int m = strlen(str2);
+    int arr[m + 1][n + 1];
+
+    arr[0][0] = 0;
+
+    for (int i = 1; i <= m; i++)
     {
-        if (ch == '\n')
+        arr[i][0] = i;
+    }
+
+    for (int j = 1; j <= n; j++)
+    {
+        arr[0][j] = j;
+    }
+
+    for (int i = 1; i <= m; i++)
+    {
+        for (int j = 1; j <= n; j++)
         {
-            i++;
+            int cost = (tolower(str1[j - 1]) == tolower(str2[i - 1])) ? 0 : 1;
+
+            int upleft = arr[i - 1][j - 1];
+            int up = arr[i - 1][j];
+            int left = arr[i][j - 1];
+
+            arr[i][j] = min3(up + 1, left + 1, upleft + cost);
         }
     }
-    return i;
-}
-
-double calcScore(int callNo, unsigned long long lastcall) {
-    unsigned long long deltaTime = (unsigned long long)time(NULL) - lastcall;
-    if (deltaTime == 0) deltaTime = 1; 
-    
-    double score = (double)callNo / ((double)deltaTime / 3600.0 + 1.0);
-    return score;
-}
-
-entry findMax(entry* entryList, int listSize) {
-    entry finalEntry = {0};
-    double maxScore = -1.0; 
-    double currScore = 0.0;
-
-    for (int i = 0; i < listSize; i++) {
-        currScore = calcScore(entryList[i].callNo, entryList[i].lastCall);
-        if (currScore > maxScore) {
-            maxScore = currScore;
-            finalEntry = entryList[i];
-        }
-    }
-    
-    return finalEntry; 
+    return arr[m][n];
 }

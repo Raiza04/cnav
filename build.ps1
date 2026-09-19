@@ -1,5 +1,5 @@
-#!/bin/bash
+# build.ps1
+$ErrorActionPreference = "Stop"
 
-set -e
 cmake -B build
 cmake --build build --clean-first --parallel
