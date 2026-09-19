@@ -1,7 +1,8 @@
+#include "platform.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sqlite3.h>
-#include "platform.h"
 
 void clean_database()
 {

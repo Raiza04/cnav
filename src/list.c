@@ -1,6 +1,8 @@
 #include <sqlite3.h>
 #include "platform.h"
-#include "main.h"
+
+#include <stdio.h>
+#include <time.h>
 
 void list_database()
 {

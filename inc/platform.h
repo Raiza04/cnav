@@ -9,6 +9,7 @@
     #include <process.h>
     
     #define realpath(N, R) _fullpath((R), (N), _MAX_PATH)
+    #define STRDUP _strdup
     #define MAKE_DIR(path) _mkdir(path)
     #define PATH_SEP "\\"
     #define GETCWD(buffer, size) _getcwd(buffer, size)
@@ -19,9 +20,11 @@
     #include <sys/stat.h>
     #include <stdlib.h>
     #include <unistd.h>
+    #include <libgen.h>
     
     #define _XOPEN_SOURCE 700
     #define MAKE_DIR(path) mkdir(path, 0700)
+    #define STRDUP strdup
     #define PATH_SEP "/"
     #define GETCWD(buffer, size) getcwd(buffer, size) 
     #define FILE_EXISTS(path) (access(path, F_OK) == 0)

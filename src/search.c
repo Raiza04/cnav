@@ -1,18 +1,44 @@
 #include "search.h"
 #include "platform.h"
-#include <sqlite3.h>
-#include <ctype.h>
-#include <string.h>
+#include "sqlite3.h"
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define min3(a, b, c) min(a, min(b, c))
 
-double calcScore(int callNo, unsigned long long lastcall, int dist);
-int levenshtein(const char *str1, const char *str2);
-bool checkStrings(const char *str1, const char *str2);
+/**
+ * @brief checks if a string is a substring of another string
+ * @details It is also case-insensitive. All chars are transformed to lowercase
+ *
+ * @param str1 The complete name that is in the database as string
+ * @param str2 The name of the wanted file
+ * @return returns true if str2 is in str1 false otherwise
+ */
+static bool checkStrings(const char *str1, const char *str2);
+
+/**
+ * @brief calculates the frecency score
+ *
+ * @param callNo How many times was the file called in total (its a member of the entry struct)
+ * @param lastcall The last time the file was called or seached for (also member of the entry struct)
+ * @param dist The calculated levenshtein distance for the penalty
+ * @return returns a score as double
+ */
+static double calcScore(int callNo, unsigned long long lastcall, int dist);
+
+/**
+ * @brief calculates the levenshtein distance with wagner-fisher algorithm
+ *
+ * @param str1 The first string for the wagner-fisher algo
+ * @param str2 The second string for the wagner-fisher algo
+ * @return It returns the absolut number of required changes (levenshtein distance) as int
+ */
+static int levenshtein(const char *str1, const char *str2);
 
 entry search(char *wantedFile)
 {
@@ -24,12 +50,12 @@ entry search(char *wantedFile)
         cwd[0] = '\0';
     }
 
-    entry result = {0}; // Leerer Fallback
+    entry result = {0};
 
     char tmp[1024];
     get_app_dir(tmp, sizeof(tmp));
 
-    char mydb[1048];
+    char mydb[1048]; // change to 1048 to resolve the compiler warning (snprintf truncation)
     snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
 
     sqlite3 *db;
@@ -62,12 +88,18 @@ entry search(char *wantedFile)
         unsigned long long lastCall = (unsigned long long)sqlite3_column_int64(stmt, 4);
         int dist = 0;
 
+        int len_name = strlen(name);
+        int len_wanted = strlen(wantedFile);
+
+        if (len_name < len_wanted)
+            continue;
+
         if (!checkStrings(name, wantedFile))
         {
             dist = levenshtein(wantedFile, name);
-            int len_name = strlen(name);
-            int len_wanted = strlen(wantedFile);
 
+            // We want to ignore not typed chars from the dist
+            // (eg. name=test.c and wanted=te => dist = 4)
             int diff = len_name - len_wanted;
             dist = dist - diff;
 
@@ -83,6 +115,8 @@ entry search(char *wantedFile)
 
         if (strcmp(path, cwd) == 0)
         {
+            // checkign the case (path=~/docs/project/ and cwd=~/docs/proj/) so we are not in the directory
+            // we check the next char in path at index cwd_len
             if (path[cwd_len] == '/' || path[cwd_len] == '\\' || path[cwd_len] == '\0')
             {
                 currScore *= 2.0;

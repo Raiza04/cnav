@@ -1,4 +1,3 @@
-#include "main.h"
 #include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,9 +1,14 @@
-#include "main.h"
+#include "search.h"
+#include "platform.h"
 
+#include <string.h>
+#include <stdio.h>
+
+void add(char *tmp_path, char *program);
 void init(void);
 void clean_database(void);
 void list_database();
-char *pathfinder(char *arr[], int arrSize)
+static char *pathfinder(char *arr[], int arrSize)
 {
     for (int i = 3; i < arrSize; i++)
     {

@@ -1,7 +1,6 @@
 #include "platform.h"
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 void get_app_dir(char *buffer, size_t max_size) {
     #ifdef _WIN32

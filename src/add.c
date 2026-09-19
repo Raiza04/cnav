@@ -1,13 +1,19 @@
-#include "add.h"
-#include "search.h"
-#include <sqlite3.h>
 #include "platform.h"
+
+#include <stdio.h>
+#include <stdlib.h>    
+#include <string.h>    
+#include <time.h>      
+#include <sqlite3.h>
 
 /*
     We want to add lines to the database in this form
     example:
     ~/Download/test.txt,test.txt,vim,<how many times was this exact line called>,<last call this line was called>
 */
+
+static inline char* cnav_dirname(char *path);
+static inline char* cnav_basename(char *path);
 
 void add(char *tmp_path, char *program)
 {
@@ -16,11 +22,11 @@ void add(char *tmp_path, char *program)
     if (path == NULL)
     {
 
-        char *dir_path = strdup(tmp_path);
-        char *base_name_str = strdup(tmp_path);
+        char *dir_path = STRDUP(tmp_path);
+        char *base_name_str = STRDUP(tmp_path);
 
-        char *dir = dirname(dir_path);
-        char *base = basename(base_name_str);
+        char *dir = cnav_dirname(dir_path);
+        char *base = cnav_basename(base_name_str);
 
         char *resolved_dir = realpath(dir, NULL);
 
@@ -53,8 +59,8 @@ void add(char *tmp_path, char *program)
         exit(EXIT_FAILURE);
     }
 
-    char *path_copy = strdup(path);
-    char *name = basename(path_copy);
+    char *path_copy = STRDUP(path);
+    char *name = cnav_basename(path_copy);
 
     char tmp[1024];
     get_app_dir(tmp, sizeof(tmp));
@@ -117,4 +123,60 @@ void add(char *tmp_path, char *program)
     sqlite3_close(db);
     free(path_copy);
     free(path);
+}
+
+/**
+ * @brief Cross-platform alternative to POSIX basename.
+ * @details Finds and returns a pointer to the filename component of a path.
+ * This function does not modify the original string.
+ * 
+ * @param path The path string to parse.
+ * @return Pointer to the base name, or "." if the path is empty or invalid.
+ */
+static inline char* cnav_basename(char *path) {
+    if (path == NULL || *path == '\0') return ".";
+    
+    char *base = path;
+    for (char *p = path; *p != '\0'; p++) {
+        if (*p == '/' || *p == '\\') {
+            base = p + 1;
+        }
+    }
+    
+    // Handle edge case where path ends with a separator (e.g., "dir/")
+    if (*base == '\0') return "."; 
+    
+    return base;
+}
+
+/**
+ * @brief Cross-platform alternative to POSIX dirname.
+ * @details Returns the directory component of a path. 
+ * WARNING: This function modifies the input string by replacing the last separator 
+ * with a null terminator. Pass a modifiable copy (e.g., via strdup).
+ * 
+ * @param path The path string to parse.
+ * @return Pointer to the directory name string.
+ */
+static inline char* cnav_dirname(char *path) {
+    if (path == NULL || *path == '\0') return ".";
+    
+    char *last_slash = NULL;
+    for (char *p = path; *p != '\0'; p++) {
+        if (*p == '/' || *p == '\\') {
+            last_slash = p;
+        }
+    }
+    
+    // No directory separator found -> file is in current directory
+    if (last_slash == NULL) return "."; 
+    
+    // Edge case: file is in the root directory (e.g., "/test.txt" or "C:\test.txt")
+    if (last_slash == path || (last_slash == path + 2 && path[1] == ':')) {
+        *(last_slash + 1) = '\0';
+        return path;
+    }
+    
+    *last_slash = '\0'; 
+    return path;
 }

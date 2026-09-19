@@ -1,12 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <ctype.h>
-#include <time.h>
-
 typedef struct
 {
     char path[1024];
@@ -16,6 +9,11 @@ typedef struct
     unsigned long long lastCall;
 } entry;
 
-entry search(char* wantedFile);
-bool checkStrings(const char* str1,const char* str2);
-double calcScore(int callNo, unsigned long long lastcall, int dist);
+/**
+ * @brief Searchs the data base based on a given file name
+ * @details Uses a modified levenshtein-algorithm combined with frecency-scoring
+ * 
+ * @param wantedFile The name of the file that the function should seach for
+ * @return It returns a entry with information about the seaching file
+ */
+entry search(char *wantedFile);
