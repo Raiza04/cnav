@@ -21,8 +21,8 @@
     #include <stdlib.h>
     #include <unistd.h>
     #include <libgen.h>
-    
     #define _XOPEN_SOURCE 700
+    
     #define MAKE_DIR(path) mkdir(path, 0700)
     #define STRDUP strdup
     #define PATH_SEP "/"
@@ -31,5 +31,4 @@
     #define EXEC_PROG execlp
 #endif
 
-// Funktion heißt jetzt get_app_dir statt get_db_path!
 void get_app_dir(char *buffer, size_t max_size);
