@@ -5,8 +5,10 @@ project(CNav C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Standard Build-Typ ist Release" FORCE)
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+
+  if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Standard Build-Typ is Release" FORCE)
 endif()
 
 set(SOURCES
@@ -28,6 +30,7 @@ if (MSVC)
     target_compile_options(n PRIVATE /W4)
 else()
     target_compile_options(n PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_definitions(n PRIVATE _XOPEN_SOURCE=700) 
 endif()
 
 if (MSVC)

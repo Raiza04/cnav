@@ -22,7 +22,7 @@
  */
 static bool checkStrings(const char *str1, const char *str2);
 
-// We define these to solve the "Argument swapping"
+// We define these to solve the "Argument swapping" later in code
 typedef struct {
   int value;
 } CallNo;
@@ -104,8 +104,8 @@ entry search(char *wantedFile) {
     LastCall l = {(unsigned long long)sqlite3_column_int64(stmt, 4)};
     Distance d = {0};
 
-    int len_name = (int)strlen(name);
-    int len_wanted = (int)strlen(wantedFile);
+    size_t len_name = strlen(name);
+    size_t len_wanted = strlen(wantedFile);
 
     if (len_name < len_wanted)
       continue;
@@ -115,8 +115,8 @@ entry search(char *wantedFile) {
 
       // We want to ignore not typed chars from the dist
       // (eg. name=test.c and wanted=te => dist = 4)
-      int diff = len_name - len_wanted;
-      d.value = d.value - diff;
+      size_t diff = len_name - len_wanted;
+      d.value = d.value - (int)diff;
 
       if (d.value > 3) {
         continue;
@@ -128,8 +128,9 @@ entry search(char *wantedFile) {
     size_t cwd_len = strlen(cwd);
 
     if (strcmp(path, cwd) == 0) {
-      // checkign the case (path=~/docs/project/ and cwd=~/docs/proj/) so we are
-      // not in the directory we check the next char in path at index cwd_len
+      // checkign the case (path=~/docs/project/ and cwd=~/docs/proj/) where we
+      // are not in the directory. We check the next char in path at index
+      // cwd_len
       if (path[cwd_len] == '/' || path[cwd_len] == '\\' ||
           path[cwd_len] == '\0') {
         currScore *= 2.0;
