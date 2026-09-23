@@ -1,5 +1,17 @@
 # 🧭 CNav (Command Navigation)
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-C11-blue.svg" alt="Language C11" />
+  <img src="https://img.shields.io/badge/Build-CMake-orange.svg" alt="Build CMake" />
+  <img src="https://img.shields.io/badge/Database-SQLite3-003B57.svg" alt="Database SQLite3" />
+  <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg" alt="Platform" />
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT" />
+</p>
+
+<p align="center">
+  <img src="assets/demo.gif" alt="CNav in action" width="800"/>
+</p>
+
 **CNav** is a lightweight, blazingly fast CLI tool written in C11 that transparently tracks your file usage habits directly from the terminal and lets you reopen them instantly using fuzzy searching.
 
 By seamlessly integrating with your shell (Bash or PowerShell), CNav remembers which files you open, which programs you use to open them, and how often you do it. It builds a robust **frecency-based** (frequency + recency) SQLite database to act as your smart file navigator.
