@@ -96,6 +96,12 @@ entry search(char *wantedFile) {
 
   double maxScore = -1.0;
 
+  // This is neccessary because we want to check if we have ANY match where
+  // levelshatein was not calculated. Otherwise we have that n te and n de are
+  // both compared although we are searching for test.txt it also considers
+  // demo.txt
+  bool foundOne = false;
+
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     const char *path = (const char *)sqlite3_column_text(stmt, 0);
     const char *name = (const char *)sqlite3_column_text(stmt, 1);
@@ -111,6 +117,9 @@ entry search(char *wantedFile) {
       continue;
 
     if (!checkStrings(name, wantedFile)) {
+      if (foundOne)
+        continue;
+
       d.value = levenshtein(wantedFile, name);
 
       // We want to ignore not typed chars from the dist
@@ -121,9 +130,14 @@ entry search(char *wantedFile) {
       if (d.value > 3) {
         continue;
       }
+    } else {
+      foundOne = true;
     }
 
     double currScore = calcScore(c, d, l);
+    if (foundOne)
+      currScore +=
+          1000000; // BIG boost for everything that matched exactly (no fuzzy)
 
     size_t cwd_len = strlen(cwd);
 
