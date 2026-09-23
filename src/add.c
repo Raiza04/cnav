@@ -2,6 +2,7 @@
 #include "platform.h"
 
 #include <sqlite3.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +44,7 @@ void add(char *tmp_path, Prog program) {
           ret = sprintf(path, "%s" PATH_SEP "%s", resolved_dir, base);
         }
 
-        if (ret < 0) {
+        if (ret < 0 || (size_t)ret >= (strlen(resolved_dir) + strlen(base))) {
           perror("Failed to resolve the provided path to add");
           return;
         }
@@ -68,8 +69,8 @@ void add(char *tmp_path, Prog program) {
 
   char mydb[1048];
   ret = snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
-  if (ret < 0) {
-    perror("Could not find the database");
+  if (ret < 0 || (size_t)ret >= sizeof(mydb)) {
+    perror("Database not found or was cutoff");
     return;
   }
 

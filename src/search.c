@@ -70,8 +70,8 @@ entry search(char *wantedFile) {
   char mydb[1048]; // change to 1048 to resolve the compiler warning (snprintf
                    // truncation)
   int ret = snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
-  if (ret < 0) {
-    perror("Could not resolve the path to the database for seach\n");
+  if (ret < 0 || (size_t)ret >= sizeof(mydb)) {
+    perror("Could not resolve the path to the database for search \n");
     return result;
   }
 

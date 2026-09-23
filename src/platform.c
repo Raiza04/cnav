@@ -1,5 +1,6 @@
 #include "platform.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,7 +25,7 @@ void get_app_dir(char *buffer, size_t max_size) {
   ret = snprintf(buffer, max_size,
                  "%s" PATH_SEP ".local" PATH_SEP "share" PATH_SEP "cnav", base);
 #endif
-  if (ret < 0) {
+  if (ret < 0 || (size_t)ret >= max_size) {
     perror("Failed to resolve the path to cnav folder");
     exit(EXIT_FAILURE);
   }

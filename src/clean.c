@@ -1,6 +1,7 @@
 #include "platform.h"
 
 #include <sqlite3.h>
+#include <stddef.h>
 #include <stdio.h>
 
 void clean_database(void) {
@@ -9,7 +10,7 @@ void clean_database(void) {
 
   char mydb[1048];
   int ret = snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
-  if (ret < 0) {
+  if (ret < 0 || (size_t)ret >= sizeof(mydb)) {
     perror("Failed to resolve the path to the database to clean\n");
   }
 
