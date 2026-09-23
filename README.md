@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/demo.gif" alt="CNav in action" width="800"/>
+  <img src="assets/demo.gif" alt="CNav in action" width="400"/>
 </p>
 
 **CNav** is a lightweight, blazingly fast CLI tool written in C11 that transparently tracks your file usage habits directly from the terminal and lets you reopen them instantly using fuzzy searching.
