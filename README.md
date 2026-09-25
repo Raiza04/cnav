@@ -147,6 +147,9 @@ n --list
 
 # Clean the database (removes entries of files that no longer exist on disk)
 n --clean
+
+# Resets the database (removes every single entry from database)
+n --purge
 ```
 
 ---
