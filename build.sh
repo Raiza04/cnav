@@ -1,5 +1,5 @@
 #!/bin/bash
 
 set -e
-cmake -B build
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --clean-first --parallel

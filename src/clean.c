@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void clean_database(void) {
   char tmp[1024];
@@ -58,4 +59,37 @@ void clean_database(void) {
   sqlite3_close(db);
 
   printf("Cleanup finished! %d entries deleted.\n", removed_count);
+}
+
+void purge(void) {
+  char tmp[1024];
+  get_app_dir(tmp, sizeof(tmp));
+
+  char mydb[1048];
+  int ret = snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
+  if (ret < 0 || (size_t)ret >= sizeof(mydb)) {
+    (void)fprintf(stderr,
+                  "Error: Failed to resolve the path to the database\n");
+    return;
+  }
+
+  sqlite3 *db;
+
+  if (sqlite3_open(mydb, &db) != SQLITE_OK) {
+    (void)fprintf(stderr, "Error: Failed to open the database\n");
+    sqlite3_close(db);
+    return;
+  }
+
+  const char *sql_purge = "DELETE FROM history; VACUUM;";
+  char *errmsg = NULL;
+
+  if (sqlite3_exec(db, sql_purge, NULL, NULL, &errmsg) != SQLITE_OK) {
+    (void)fprintf(stderr, "Error: Failed to execute purge: %s\n", errmsg);
+    sqlite3_free(errmsg);
+  } else {
+    printf("Database successfully emptied\n");
+  }
+
+  sqlite3_close(db);
 }

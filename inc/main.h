@@ -12,6 +12,9 @@ void add(char *tmp_path, Prog program);
 void init(void);
 void clean_database(void);
 void list_database(void);
+void purge(void);
+
+Prog prog_init(char *program);
 
 typedef struct {
   char *program;
@@ -22,37 +25,37 @@ typedef struct {
 
 typedef int (*CommandFunc)(Flags *);
 
-static int run_list(Flags *flag __attribute__((unused))) {
+static inline int run_list(Flags *flag __attribute__((unused))) {
   list_database();
   return EXIT_SUCCESS;
 }
 
-static int run_init(Flags *flag __attribute__((unused))) {
+static inline int run_init(Flags *flag __attribute__((unused))) {
   init();
   return EXIT_SUCCESS;
 }
 
-static int run_clean(Flags *flag __attribute__((unused))) {
+static inline int run_clean(Flags *flag __attribute__((unused))) {
   clean_database();
   return EXIT_SUCCESS;
 }
 
-static int run_purge(Flags *flag __attribute__((unused))) {
+static inline int run_purge(Flags *flag __attribute__((unused))) {
+  purge();
+  return EXIT_SUCCESS;
+}
+
+static inline int run_delete(Flags *flag __attribute__((unused))) {
   printf("This flag is under development\n");
   return EXIT_FAILURE;
 }
 
-static int run_delete(Flags *flag __attribute__((unused))) {
-  printf("This flag is under development\n");
-  return EXIT_FAILURE;
-}
-
-static int run_add(Flags *flag) {
+static inline int run_add(Flags *flag) {
   add(flag->path, prog_init(flag->program));
   return EXIT_SUCCESS;
 }
 
-static int run_search(Flags *flag) {
+static inline int run_search(Flags *flag) {
   entry result = search(flag->query);
 
   if (result.path[0] == '\0') {
@@ -71,7 +74,7 @@ static int run_search(Flags *flag) {
   return EXIT_SUCCESS;
 }
 
-static int parse_and_run(int argc, char *argv[]) {
+static inline int parse_and_run(int argc, char *argv[]) {
   Flags opts = {0};
   CommandFunc active = NULL;
 
@@ -85,7 +88,7 @@ static int parse_and_run(int argc, char *argv[]) {
 
   int numCommand = sizeof(dispatch_table) / sizeof(dispatch_table[0]);
 
-  for (int i = 0; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--add") == 0) {
 
       if (active != NULL) {
@@ -104,7 +107,6 @@ static int parse_and_run(int argc, char *argv[]) {
             "Error: '--add' needs to be called with a program and a file\n");
         return EXIT_FAILURE;
       }
-
     } else if (strcmp(argv[i], "-d") == 0) {
 
       if (active != NULL) {
@@ -121,7 +123,7 @@ static int parse_and_run(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     } else if (argv[i][0] == '-') {
-      int found = 1;
+      int found = 0;
       for (int j = 0; j < numCommand; j++) {
         if (strcmp(argv[i], dispatch_table[j].flag) == 0) {
           if (active != NULL) {
@@ -147,8 +149,9 @@ static int parse_and_run(int argc, char *argv[]) {
       };
     }
   }
+
   if (!active && argc == 1) {
-    (void)fprintf(stderr, "Usage: n [option] or <file to open>");
+    (void)fprintf(stderr, "Usage: n [option] or <file to open>\n");
     return EXIT_FAILURE;
   }
 
