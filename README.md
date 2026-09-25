@@ -150,6 +150,9 @@ n --clean
 
 # Resets the database (removes every single entry from database)
 n --purge
+
+# Removes one single entry of choice from the database(the name can be incomplete)
+n -d tes    #this might remove test.txt from the db
 ```
 
 ---

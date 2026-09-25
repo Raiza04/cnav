@@ -13,6 +13,7 @@ void init(void);
 void clean_database(void);
 void list_database(void);
 void purge(void);
+void delete_entry(char *line);
 
 Prog prog_init(char *program);
 
@@ -46,8 +47,8 @@ static inline int run_purge(Flags *flag __attribute__((unused))) {
 }
 
 static inline int run_delete(Flags *flag __attribute__((unused))) {
-  printf("This flag is under development\n");
-  return EXIT_FAILURE;
+  delete_entry(flag->delete_target);
+  return EXIT_SUCCESS;
 }
 
 static inline int run_add(Flags *flag) {
