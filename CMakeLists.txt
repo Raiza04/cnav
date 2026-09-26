@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 project(CNav C)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Standard Build-Typ is Release" FORCE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build-Typ is Release" FORCE)
 endif()
 
 set(SOURCES

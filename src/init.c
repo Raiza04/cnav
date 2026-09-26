@@ -60,5 +60,63 @@ void init(void) {
 #endif
   }
 
+#ifdef _WIN32
+  // Windows PowerShell Autocomplete
+  printf("Register-ArgumentCompleter -CommandName n -ScriptBlock {\n"
+         "    param($commandName, $parameterName, $wordToComplete, "
+         "$commandAst, $fakeBoundParameters)\n"
+         "    $elements = $commandAst.CommandElements\n"
+         "    if ($elements.Count -gt 2 -and $elements[1].Value -ne '-d') { "
+         "return }\n"
+         "    if ($wordToComplete -match '^-') {\n"
+         "        $flags = @('--list', '--clean', '--init', '--purge', "
+         "'--add', '-d')\n"
+         "        $flags | Where-Object { $_ -like \"$wordToComplete*\" } | "
+         "ForEach-Object {\n"
+         "            [System.Management.Automation.CompletionResult]::new($_, "
+         "$_, 'ParameterName', $_)\n"
+         "        }\n"
+         "    } else {\n"
+         "        $files = n --comp \"$wordToComplete\" 2>$null\n"
+         "        if ($null -ne $files) {\n"
+         "            $files | ForEach-Object {\n"
+         "                "
+         "[System.Management.Automation.CompletionResult]::new($_, $_, "
+         "'ParameterValue', $_)\n"
+         "            }\n"
+         "        }\n"
+         "    }\n"
+         "}\n\n");
+#else
+  // Linux/macOS Bash & Zsh Autocomplete
+  printf("_n_completions() {\n"
+         "    local current_word=\"${COMP_WORDS[COMP_CWORD]}\"\n"
+         "    local prev_word=\"${COMP_WORDS[COMP_CWORD-1]}\"\n"
+         "    \n"
+         "    # Nur Vorschläge für das erste Argument (oder nach -d)\n"
+         "    if [ \"${COMP_CWORD}\" -eq 1 ]; then\n"
+         "        if [[ \"$current_word\" == -* ]]; then\n"
+         "            local flags=\"--list --clean --init --purge --add -d\"\n"
+         "            COMPREPLY=( $(compgen -W \"${flags}\" -- "
+         "\"${current_word}\") )\n"
+         "        else\n"
+         "            local IFS=$'\\n'\n"
+         "            local files=$(n --comp \"${current_word}\" 2>/dev/null)\n"
+         "            COMPREPLY=( $(compgen -W \"${files}\" -- "
+         "\"${current_word}\") )\n"
+         "        fi\n"
+         "    elif [ \"${COMP_CWORD}\" -eq 2 ] && [ \"$prev_word\" = \"-d\" ]; "
+         "then\n"
+         "        local IFS=$'\\n'\n"
+         "        local files=$(n --comp \"${current_word}\" 2>/dev/null)\n"
+         "        COMPREPLY=( $(compgen -W \"${files}\" -- "
+         "\"${current_word}\") )\n"
+         "    else\n"
+         "        COMPREPLY=()\n"
+         "    fi\n"
+         "}\n"
+         "complete -F _n_completions n\n\n");
+#endif
+
   (void)fclose(myfile);
 }

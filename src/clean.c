@@ -1,3 +1,4 @@
+#include "main.h"
 #include "platform.h"
 #include "search.h"
 
@@ -170,6 +171,49 @@ void delete_entry(char *line) {
   } else {
     printf(ANSI_COLOR_GREEN "Successfully deleted: %s\n" ANSI_COLOR_RESET,
            match.path);
+  }
+
+  sqlite3_finalize(stmt);
+  sqlite3_close(db);
+}
+
+void comp(char *wanted) {
+  char tmp[1024];
+  get_app_dir(tmp, sizeof(tmp));
+
+  char mydb[1048];
+  int ret = snprintf(mydb, sizeof(mydb), "%s" PATH_SEP "cnav.db", tmp);
+  if (ret < 0 || (size_t)ret >= sizeof(mydb))
+    return;
+
+  sqlite3 *db;
+  if (sqlite3_open(mydb, &db) != SQLITE_OK) {
+    sqlite3_close(db);
+    return;
+  }
+
+  const char *sql_comp = "SELECT name FROM history WHERE name LIKE ?";
+  sqlite3_stmt *stmt;
+
+  if (sqlite3_prepare_v2(db, sql_comp, -1, &stmt, NULL) != SQLITE_OK) {
+    sqlite3_close(db);
+    return;
+  }
+
+  char search_pattern[512];
+  (void)snprintf(search_pattern, sizeof(search_pattern), "%s%%", wanted);
+
+  if (sqlite3_bind_text(stmt, 1, search_pattern, -1, SQLITE_TRANSIENT) !=
+      SQLITE_OK) {
+    sqlite3_finalize(stmt); // Hier fehlte das finalize
+    sqlite3_close(db);
+    return;
+  }
+
+  while (sqlite3_step(stmt) == SQLITE_ROW) {
+    // FEHLER 5 BEHOBEN: Spalte 0 abfragen
+    const char *name = (const char *)sqlite3_column_text(stmt, 0);
+    printf("%s\n", name);
   }
 
   sqlite3_finalize(stmt);

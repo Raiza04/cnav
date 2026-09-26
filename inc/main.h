@@ -14,8 +14,7 @@ void clean_database(void);
 void list_database(void);
 void purge(void);
 void delete_entry(char *line);
-
-Prog prog_init(char *program);
+void comp(char *wanted);
 
 typedef struct {
   char *program;
@@ -47,16 +46,33 @@ static inline int run_purge(Flags *flag __attribute__((unused))) {
 }
 
 static inline int run_delete(Flags *flag __attribute__((unused))) {
+  if (flag->delete_target == NULL)
+    return EXIT_FAILURE;
+
   delete_entry(flag->delete_target);
   return EXIT_SUCCESS;
 }
 
 static inline int run_add(Flags *flag) {
+  if (flag->program == NULL || flag->path == NULL)
+    return EXIT_FAILURE;
+
   add(flag->path, prog_init(flag->program));
   return EXIT_SUCCESS;
 }
 
+static inline int run_comp(Flags *flag) {
+  if (flag->query == NULL)
+    return EXIT_FAILURE;
+
+  comp(flag->query);
+  return EXIT_SUCCESS;
+}
+
 static inline int run_search(Flags *flag) {
+  if (flag->query == NULL)
+    return EXIT_FAILURE;
+
   entry result = search(flag->query);
 
   if (result.path[0] == '\0') {
@@ -64,7 +80,7 @@ static inline int run_search(Flags *flag) {
     return EXIT_FAILURE;
   }
 
-  add(flag->path, prog_init(flag->program));
+  add(result.path, prog_init(result.program));
 
   if (EXEC_PROG(result.program, result.program, result.path, (char *)NULL) ==
       -1) {
@@ -108,6 +124,19 @@ static inline int parse_and_run(int argc, char *argv[]) {
             "Error: '--add' needs to be called with a program and a file\n");
         return EXIT_FAILURE;
       }
+    } else if (strcmp(argv[i], "--comp") == 0) {
+      if (active != NULL) {
+        return EXIT_FAILURE;
+      }
+
+      active = run_comp;
+
+      if (i + 1 < argc) {
+        opts.query = argv[++i];
+      } else {
+        return EXIT_FAILURE;
+      }
+
     } else if (strcmp(argv[i], "-d") == 0) {
 
       if (active != NULL) {

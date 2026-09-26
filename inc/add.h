@@ -7,7 +7,7 @@ typedef struct {
   char s[64];
 } Prog;
 
-inline Prog prog_init(char *program) {
+static inline Prog prog_init(char *program) {
   Prog p;
   strncpy(p.s, program, sizeof(p.s) - 1);
   p.s[sizeof(p.s) - 1] = '\0';

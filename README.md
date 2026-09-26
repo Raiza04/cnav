@@ -26,7 +26,7 @@ By seamlessly integrating with your shell (Bash or PowerShell), CNav remembers w
 * **Context-Aware Scoring:** Files located in your Current Working Directory (CWD) receive a score boost, ensuring highly relevant search results.
 * **Transparent Tracking:** Operates silently in the background via intelligent shell hooks. It does not block your terminal, pollute your `stdout`, or break pipelines (e.g., `cat file.txt | grep X` works perfectly).
 * **Success-Aware:** CNav only tracks commands that execute successfully. Typos won't pollute your database.
-
+* **Auto-complete**: CNav uses autocomplete for more convenient and faster usage.
 ---
 
 ## 🛠️ How it Works (The Algorithm)
