@@ -75,7 +75,7 @@ cd cnav
 To allow CNav to intercept your commands, you need to update your shell configuration and tell CNav which tools it should track.
 
 ### 1. Define Tools to Track
-CNav creates a configuration directory in your local app data folder (e.g., `~/.local/share/cnav/` on Linux and `\Users\<user-name>\AppData\Local\cnav\tools.txt` on windows). Edit the `tools.txt` file in this directory to include the commands you want to track (one per line):
+CNav creates a configuration directory in your local app data folder (e.g., `~/.local/share/cnav/` on Linux and `\Users\<user-name>\AppData\Local\cnav\` on windows). Edit the `tools.txt` file in this directory to include the commands you want to track (one per line):
 ```text
 # Example tools.txt
 vim
