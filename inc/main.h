@@ -25,27 +25,31 @@ typedef struct {
 
 typedef int (*CommandFunc)(Flags *);
 
-static inline int run_list(Flags *flag __attribute__((unused))) {
+static inline int run_list(Flags *flag) {
+  (void)flag;
   list_database();
   return EXIT_SUCCESS;
 }
 
-static inline int run_init(Flags *flag __attribute__((unused))) {
+static inline int run_init(Flags *flag) {
+  (void)flag;
   init();
   return EXIT_SUCCESS;
 }
 
-static inline int run_clean(Flags *flag __attribute__((unused))) {
+static inline int run_clean(Flags *flag) {
+  (void)flag;
   clean_database();
   return EXIT_SUCCESS;
 }
 
-static inline int run_purge(Flags *flag __attribute__((unused))) {
+static inline int run_purge(Flags *flag) {
+  (void)flag;
   purge();
   return EXIT_SUCCESS;
 }
 
-static inline int run_delete(Flags *flag __attribute__((unused))) {
+static inline int run_delete(Flags *flag) {
   if (flag->delete_target == NULL)
     return EXIT_FAILURE;
 

@@ -1,17 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(CNav C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address")
+# ==============================================================================
+# 1. Global Settings (Standard & Build Type)
+# ==============================================================================
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
-
+# Set Release as the default build type if nothing else is specified
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build-Typ is Release" FORCE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type is Release" FORCE)
 endif()
 
+# Option for AddressSanitizer (OFF by default)
+option(ENABLE_ASAN "Enable AddressSanitizer for memory debugging" OFF)
+
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+
+# ==============================================================================
+# 2. Define Target (Source files and Executable)
+# ==============================================================================
 set(SOURCES
     src/main.c
     src/add.c
@@ -25,23 +33,40 @@ set(SOURCES
 
 add_executable(n ${SOURCES})
 
+# Specify include directories
 target_include_directories(n PRIVATE inc)
 
+# ==============================================================================
+# 3. Compiler Warnings and Platform Flags
+# ==============================================================================
 if(MSVC)
+  # Windows/MSVC specifics
   target_compile_options(n PRIVATE /W4)
+  target_compile_definitions(n PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
+  # Linux/macOS specifics (GCC/Clang)
   target_compile_options(n PRIVATE -Wall -Wextra -Wpedantic)
   target_compile_definitions(n PRIVATE _XOPEN_SOURCE=700)
+
+  # Enable AddressSanitizer only if requested by the user
+  if(ENABLE_ASAN)
+    target_compile_options(n PRIVATE -g -fsanitize=address)
+    target_link_options(n PRIVATE -fsanitize=address)
+  endif()
 endif()
 
+# ==============================================================================
+# 4. Exceptions & External Libraries
+# ==============================================================================
+# Completely disable warnings for the SQLite amalgamation file
 if(MSVC)
   set_source_files_properties(src/sqlite3.c PROPERTIES COMPILE_FLAGS "/W0")
 else()
   set_source_files_properties(src/sqlite3.c PROPERTIES COMPILE_FLAGS "-w")
 endif()
 
+# Link Threads and dynamic linking (dl)
 find_package(Threads REQUIRED)
-
 if(UNIX)
   target_link_libraries(n PRIVATE Threads::Threads dl)
 else()

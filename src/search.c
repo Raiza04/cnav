@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -122,6 +123,9 @@ entry search(char *wantedFile) {
 
       d.value = levenshtein(wantedFile, name);
 
+      if (d.value < 0)
+        continue;
+
       // We want to ignore not typed chars from the dist
       // (eg. name=test.c and wanted=te => dist = 4)
       size_t diff = len_name - len_wanted;
@@ -227,28 +231,36 @@ bool checkStrings(const char *str1, const char *str2) {
 int levenshtein(const char *str1, const char *str2) {
   size_t n = strlen(str1);
   size_t m = strlen(str2);
-  size_t arr[m + 1][n + 1];
-
-  arr[0][0] = 0;
+  size_t *arr = malloc((m + 1) * (n + 1) * sizeof(*arr));
+  if (arr == NULL) {
+    (void)fprintf(stderr, "Error: could not reserve memory.");
+    return -1;
+  }
+  // 2d to 1d = i * (n + 1) + j
+  arr[0] = 0;
 
   for (size_t i = 1; i <= m; i++) {
-    arr[i][0] = i;
+    arr[i * (n + 1)] = i;
   }
 
   for (size_t j = 1; j <= n; j++) {
-    arr[0][j] = j;
+    arr[j] = j;
   }
 
   for (size_t i = 1; i <= m; i++) {
     for (size_t j = 1; j <= n; j++) {
       int cost = (tolower(str1[j - 1]) == tolower(str2[i - 1])) ? 0 : 1;
 
-      size_t upleft = arr[i - 1][j - 1];
-      size_t up = arr[i - 1][j];
-      size_t left = arr[i][j - 1];
+      size_t upleft = arr[(i - 1) * (n + 1) + (j - 1)];
+      size_t up = arr[(i - 1) * (n + 1) + j];
+      size_t left = arr[i * (n + 1) + (j - 1)];
 
-      arr[i][j] = min3(up + 1, left + 1, upleft + cost);
+      arr[i * (n + 1) + j] = min3(up + 1, left + 1, upleft + cost);
     }
   }
-  return (int)arr[m][n];
+
+  int res = (int)arr[m * (n + 1) + n];
+  free(arr);
+
+  return res;
 }
