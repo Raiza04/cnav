@@ -66,7 +66,7 @@ cd cnav
 ```powershell
 .\build.ps1
 ```
-*(Alternatively, you can manually run `cmake -B build` followed by `cmake --build build --parallel` on any OS).*
+*(Alternatively, you can manually run `cmake -B build` followed by `cmake --build build --parallel --config Release` on any OS).*
 
 ---
 
@@ -75,7 +75,7 @@ cd cnav
 To allow CNav to intercept your commands, you need to update your shell configuration and tell CNav which tools it should track.
 
 ### 1. Define Tools to Track
-CNav creates a configuration directory in your local app data folder (e.g., `~/.local/share/cnav/` on Linux). Edit the `tools.txt` file in this directory to include the commands you want to track (one per line):
+CNav creates a configuration directory in your local app data folder (e.g., `~/.local/share/cnav/` on Linux and `\Users\<user-name>\AppData\Local\cnav\tools.txt` on windows). Edit the `tools.txt` file in this directory to include the commands you want to track (one per line):
 ```text
 # Example tools.txt
 vim
@@ -84,6 +84,8 @@ cat
 batcat
 code
 ```
+
+The default commands mostly work only on linux.
 
 ### 2. Initialize Shell Hooks
 
@@ -110,12 +112,13 @@ Add the following to your PowerShell Profile (You can open it by typing `notepad
 
 ```powershell
 # Add CNav to PATH (Adjust the path!)
-$env:PATH += ";C:\path\to\your\cnav\build"
+$env:PATH += ";C:\path\to\your\cnav\build\Release"
 
 # Initialize CNav
-Invoke-Expression "$(n --init)"
+Invoke-Expression (n --init | Out-String)
 ```
 Restart your PowerShell or run `. $PROFILE` to apply.
+Note: Check if there is a file named `n.exe` in your Release folder. If not enter the path to that leads to `n.exe` 
 
 ---
 

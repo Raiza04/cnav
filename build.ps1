@@ -2,4 +2,4 @@
 $ErrorActionPreference = "Stop"
 
 cmake -B build
-cmake --build build --clean-first --parallel
+cmake --build build --clean-first --parallel --config Release
