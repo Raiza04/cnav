@@ -93,9 +93,9 @@ If the command succeeds, CNav silently logs the file and the program used, updat
 To quickly open a file, call `n` followed by a search term. CNav will find the best match and open it.
 
 ```bash
-n main        # Might open src/main.c in vim
+n maan        # Might open src/main.c in vim
 n read        # Might open README.md in code
-n tb          # Might open tools.txt (Typo tolerance!)
+n to          # Might open tools.txt (Typo tolerance!)
 
 ```
 
