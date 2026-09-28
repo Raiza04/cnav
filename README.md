@@ -24,101 +24,51 @@ By seamlessly integrating with your shell (Bash, Zsh, or PowerShell), CNav remem
 * **Robust SQLite Backend:** Safely stores history in a local SQLite database (`cnav.db`). Built using the SQLite Amalgamation approach, so there are **no external dependencies** to install.
 * **Smart Fuzzy Search:** Uses a custom prefix-aware **Levenshtein distance** algorithm. It tolerates typos and forgives incomplete search terms. 
 * **Context-Aware Scoring:** Files located in your Current Working Directory (CWD) receive a score boost, ensuring highly relevant search results.
-* **Transparent Tracking:** Operates silently in the background via intelligent shell hooks. It does not block your terminal, pollute your `stdout`, or break pipelines (e.g., `cat file.txt | grep X` works perfectly).
+* **Transparent Tracking:** Operates silently in the background via intelligent shell hooks. It does not block your terminal, pollute your `stdout`, or break pipelines.
 * **Success-Aware:** CNav only tracks commands that execute successfully. Typos won't pollute your database.
-* **Smart Auto-completion:** CNav natively integrates with your shell to provide dynamic, real-time tab completion not just for its flags, but also for the files stored in your database!
+* **Smart Auto-completion:** CNav natively integrates with your shell to provide dynamic, real-time tab completion for the files stored in your database!
 
 ---
 
-## 🛠️ How it Works (The Algorithm)
+## 📦 Installation (Pre-compiled Binaries)
 
-When you search for a file using `n <search_term>`, CNav ranks all files in your database based on a custom algorithm:
-1. **Frecency:** Calculates a base score using the total number of calls (`callNo`) divided by the time elapsed since the last call (`deltaTime`).
-2. **Levenshtein Penalty:** Applies a penalty based on typo count. It intelligently handles length differences, ensuring that partial inputs (e.g., typing `to` for `tools.txt`) aren't heavily penalized.
-3. **CWD Boost:** If the matched file resides in the directory you are currently in, its final score is multiplied by 2.
+The easiest way to install CNav. These scripts will automatically download the latest release, place it in your local bin folder, and setup your shell hooks.
 
-CNav then automatically opens the highest-scoring file with the exact program you originally used!
-
----
-
-## 📦 Build Instructions
-
-CNav is built with CMake to ensure seamless compilation across different operating systems and compilers (GCC, Clang, MSVC).
-
-### Prerequisites
-* CMake (>= 3.10)
-* A C Compiler (GCC/Clang for Linux/macOS, MSVC for Windows)
-
-### 1. Clone the repository
+**🐧 For Linux & macOS (Bash/Zsh):**
 ```bash
-git clone https://github.com/Raiza04/cnav.git
-cd cnav
+curl -sSfL https://raw.githubusercontent.com/Raiza04/cnav/main/install.sh | bash
+
 ```
 
-### 2. Compile
+**🪟 For Windows (PowerShell):**
 
-**On Linux / macOS:**
-```bash
-./build.sh
-```
-
-**On Windows (PowerShell):**
 ```powershell
-.\build.ps1
+Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Raiza04/cnav/main/install.ps1" -UseBasicParsing).Content
+
 ```
-*(Alternatively, you can manually run `cmake -B build` followed by `cmake --build build --parallel --config Release` on any OS).*
+
+*After installation, restart your terminal.*
 
 ---
 
-## ⚙️ Setup & Configuration
+## ⚙️ Configuration (Telling CNav what to track)
 
-To allow CNav to intercept your commands, you need to update your shell configuration and tell CNav which tools it should track.
+CNav needs to know which tools you want to track (e.g., `vim`, `nano`, `code`).
+Edit the `tools.txt` file located in:
 
-### 1. Define Tools to Track
-CNav creates a configuration directory in your local app data folder (e.g., `~/.local/share/cnav/` on Linux and `\Users\<user-name>\AppData\Local\cnav\` on windows). Edit the `tools.txt` file in this directory to include the commands you want to track (one per line):
+* **Linux/macOS:** `~/.local/share/cnav/tools.txt`
+* **Windows:** `%LOCALAPPDATA%\cnav\tools.txt` (or `~\AppData\Local\cnav\tools.txt`)
+
+Add the commands you want to track (one per line):
+
 ```text
 # Example tools.txt
 vim
 nano
-cat
-batcat
 code
+notepad
+
 ```
-
-The default commands mostly work only on linux.
-
-### 2. Initialize Shell Hooks
-
-**🐧 For Linux / macOS (Bash & Zsh):**
-Add the following lines to your `~/.bashrc` (or `~/.zshrc`).
-> ⚠️ **CRITICAL ORDER:** The CNav initialization **MUST** happen before you define or source any aliases (like `~/.bash_aliases`).
-
-```bash
-# 1. Add CNav build directory to your PATH (Adjust the path!)
-export PATH="$PATH:/path/to/your/cnav/build"
-
-# 2. Initialize CNav hooks FIRST
-eval "$(n --init)"
-
-# 3. Load your aliases AFTER CNav
-if [ -f ~/.bash_aliases ]; then
-  . ~/.bash_aliases
-fi
-```
-*Note: The `eval` command automatically sets up the tracking hooks and the dynamic tab-completion for CNav!*
-
-**🪟 For Windows (PowerShell):**
-Add the following to your PowerShell Profile (You can open it by typing `notepad $PROFILE` in PowerShell):
-
-```powershell
-# Add CNav to PATH (Adjust the path!)
-$env:PATH += ";C:\path\to\your\cnav\build\Release"
-
-# Initialize CNav
-Invoke-Expression (n --init | Out-String)
-```
-Restart your PowerShell or run `. $PROFILE` to apply.
-Note: Check if there is a file named `n.exe` in your Release folder. If not enter the path to that leads to `n.exe` 
 
 ---
 
@@ -127,36 +77,85 @@ Note: Check if there is a file named `n.exe` in your Release folder. If not ente
 Using CNav is incredibly simple because tracking happens completely in the background.
 
 ### 1. Tracking Files (Automatic)
+
 Just use your terminal normally:
+
 ```bash
 vim src/main.c
-batcat README.md
+code README.md
+
 ```
+
 If the command succeeds, CNav silently logs the file and the program used, updates the SQLite database, and increments the usage counter.
 
 ### 2. Opening Tracked Files
+
 To quickly open a file, call `n` followed by a search term. CNav will find the best match and open it.
+
 ```bash
 n main        # Might open src/main.c in vim
-n read        # Might open README.md in batcat
+n read        # Might open README.md in code
 n tb          # Might open tools.txt (Typo tolerance!)
+
 ```
 
 ### 3. Database Management
+
 CNav provides built-in flags to manage your tracked history:
 
 ```bash
-# View a formatted table of your tracked files, sorted by recent usage
-n --list
+n --list      # View a formatted table of your tracked files
+n --clean     # Remove entries of files that no longer exist on disk
+n --purge     # Completely empty the database history
+n -d test     # Interactively prompt to delete a specific entry (e.g., test.txt)
 
-# Clean the database (removes entries of files that no longer exist on your disk)
-n --clean
+```
 
-# Reset the database (completely empties the history)
-n --purge
+---
 
-# Remove a specific entry from the database (interactive prompt included)
-n -d test     # For example, this will prompt to remove test.txt
+## 🛠️ Manual Build Instructions
+
+If you want to compile CNav from source instead of using the installation scripts.
+
+### Prerequisites
+
+* CMake (>= 3.10)
+* A C Compiler (GCC/Clang for Linux/macOS, MSVC for Windows)
+
+### 1. Clone & Compile
+
+```bash
+git clone https://github.com/Raiza04/cnav.git
+cd cnav
+
+# On Linux/macOS:
+./build.sh
+
+# On Windows:
+.\build.ps1
+
+```
+
+### 2. Manual Shell Setup
+
+If you built manually, you must add CNav to your PATH and initialize the hooks.
+
+**Linux / macOS (`~/.bashrc` or `~/.zshrc`):**
+
+> ⚠️ **CRITICAL:** CNav initialization MUST happen before you define or source any aliases.
+
+```bash
+export PATH="$PATH:/path/to/cnav/build"
+eval "$(n --init)"
+
+```
+
+**Windows (`$PROFILE`):**
+
+```powershell
+$env:PATH += ";C:\path\to\cnav\build\Release"
+Invoke-Expression (n --init | Out-String)
+
 ```
 
 ---

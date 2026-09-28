@@ -1,0 +1,45 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            original_path: build/n
+            release_name: cnav-linux-amd64
+          - os: windows-latest
+            original_path: build\Release\n.exe
+            release_name: cnav-windows-amd64.exe
+
+    runs-on: ${{ matrix.os }}
+    
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Project
+        run: |
+          cmake -B build
+          cmake --build build --config Release
+
+      - name: Rename Binary (Linux)
+        if: runner.os == 'Linux'
+        run: mv ${{ matrix.original_path }} ${{ matrix.release_name }}
+
+      - name: Rename Binary (Windows)
+        if: runner.os == 'Windows'
+        run: mv ${{ matrix.original_path }} ${{ matrix.release_name }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.release_name }}
