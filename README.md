@@ -30,24 +30,89 @@ By seamlessly integrating with your shell (Bash, Zsh, or PowerShell), CNav remem
 
 ---
 
-## 📦 Installation (Pre-compiled Binaries)
+## 📦 Installation
 
-The easiest way to install CNav. These scripts will automatically download the latest release, place it in your local bin folder, and setup your shell hooks.
+  <details>
+  <summary><strong>Linux & macOS</strong></summary>
 
-**🐧 For Linux & macOS (Bash/Zsh):**
-```bash
-curl -sSfL https://raw.githubusercontent.com/Raiza04/cnav/main/install.sh | bash
+  >#### Easy way (Pre-compiled Binaries)
+  > 
+  > The easiest way is to install the binary files. To do this copy-paste this line into your shell (bash/zsh).
+  >   ```bash
+  >   curl -sSfL https://raw.githubusercontent.com/Raiza04/cnav/main/install.sh | bash
+  >   ```
+  > 
+  >#### Manual installation
+  > Follow the steps below if you wish to install it manually.
+  > 
+  > ##### Prerequisites
+  >   - CMake (>= 3.10)
+  >   - A C Compiler (GCC/Clang)
+  > 
+  > ##### Clone & Compile
+  > 
+  > ```bash
+  > git clone https://github.com/Raiza04/cnav.git
+  > cd cnav
+  > ./build.sh
+  > ```
+  > 
+  > ##### Shell Setup
+  > 
+  > You must add CNav to your PATH and initialize the hooks.<br>
+  > Add these lines at the end of your shell profile **(`~/.bashrc` or `~/.zshrc`):**
+  > 
+  > ```bash
+  > export PATH="$PATH:/path/to/cnav/build"
+  > eval "$(n --init)"
+  > ```
+  > **Note**: If you have any issues with aliases then try to move the `eval` line before you declare any alias.
+  >
+  > You have to restart the terminal or source the shell profile again (e.g. `source ~/.bashrc`) no matter which method you use.
 
-```
-
-**🪟 For Windows (PowerShell):**
-
-```powershell
-Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Raiza04/cnav/main/install.ps1" -UseBasicParsing).Content
-
-```
-
-*After installation, restart your terminal.*
+    
+  </details>
+  <details>
+  <summary><strong>Windows</strong></summary>
+  
+  > #### Easy way (Pre-compiled Binaries)
+  > **`NOTE`**: Please refer to linux installation if you use git bash.
+  > 
+  > The easiest way is to install the binary files. To do this copy-paste this line into your PowerShell (NOT CMD). 
+  > 
+  >  ```powershell
+  >  Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Raiza04/cnav/main/install.ps1" -UseBasicParsing).Content
+  > ```
+  > 
+  > #### Manual installation
+  > If you wish to install it manually yourself then follow the steps below.
+  > 
+  > ##### Prerequisites
+  >   - CMake (>= 3.10)
+  >   - A C Compiler (MSVC)
+  >   - git if not already installed for clone
+  > 
+  > ##### Clone & Compile
+  > 
+  > ```powershell
+  > git clone https://github.com/Raiza04/cnav.git
+  > cd cnav
+  > .\build.ps1
+  > ```
+  > 
+  > ##### Shell Setup
+  > 
+  > You must add CNav to your PATH and initialize the hooks.<br>
+  > Add these lines at the end of your shell profile **(`$PROFILE`):**
+  > 
+  > ```powershell
+  > $env:PATH += ";C:\path\to\cnav\build\Release"
+  > Invoke-Expression (n --init | Out-String)
+  > ```
+  > 
+  > You have to restart the terminal or source the shell profile again (e.g. `. $PROFILE`) no matter which method you use.
+  > 
+  </details>
 
 ---
 
@@ -62,12 +127,13 @@ Edit the `tools.txt` file located in:
 Add the commands you want to track (one per line):
 
 ```text
-# Example tools.txt
+# Default tools.txt
 vim
 nano
+cat
 code
-notepad
-
+xdg-open
+open
 ```
 
 ---
@@ -110,56 +176,9 @@ n --purge     # Completely empty the database history
 n -d test     # Interactively prompt to delete a specific entry (e.g., test.txt)
 
 ```
-
----
-
-## 🛠️ Manual Build Instructions
-
-If you want to compile CNav from source instead of using the installation scripts.
-
-### Prerequisites
-
-* CMake (>= 3.10)
-* A C Compiler (GCC/Clang for Linux/macOS, MSVC for Windows)
-
-### 1. Clone & Compile
-
-```bash
-git clone https://github.com/Raiza04/cnav.git
-cd cnav
-
-# On Linux/macOS:
-./build.sh
-
-# On Windows:
-.\build.ps1
-
-```
-
-### 2. Manual Shell Setup
-
-If you built manually, you must add CNav to your PATH and initialize the hooks.
-
-**Linux / macOS (`~/.bashrc` or `~/.zshrc`):**
-
-> ⚠️ **CRITICAL:** CNav initialization MUST happen before you define or source any aliases.
-
-```bash
-export PATH="$PATH:/path/to/cnav/build"
-eval "$(n --init)"
-
-```
-
-**Windows (`$PROFILE`):**
-
-```powershell
-$env:PATH += ";C:\path\to\cnav\build\Release"
-Invoke-Expression (n --init | Out-String)
-
-```
-
 ---
 
 ## 📄 License
 
 This project is open-source and available under the **MIT License**.
+

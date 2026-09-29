@@ -42,7 +42,7 @@ void init(void) {
 #ifdef _WIN32
     // Windows PowerShell Syntax
     printf("function %s {\n"
-           " & (@(Get-Command %s -CommandType Application)[0]) $args\n"
+           " & (@(Get-Command %s -CommandType Application)[0]) @args\n"
            "    if ($LASTEXITCODE -eq 0) {\n"
            "        n --add %s $args $null 2>&1\n"
            "    }\n"

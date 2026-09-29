@@ -2,8 +2,8 @@ Output "demo.gif"
 
 Set Theme "Dracula"
 Set FontFamily "Liberation Mono"
-Set FontSize 24
-Set Width 1200
+Set FontSize 40
+Set Width 1500
 Set Height 600
 Set Padding 20
 Set Shell "bash"
@@ -42,6 +42,8 @@ Type "n te"
 Sleep 500ms
 Enter
 Sleep 2s
-
 Type ":q"
-Sleep 4s
+Sleep 500ms
+Enter
+
+Sleep 3s
