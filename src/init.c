@@ -61,11 +61,12 @@ void init(void) {
   }
 
 #ifdef _WIN32
-  // Windows PowerShell Autocomplete
-  printf("Register-ArgumentCompleter -CommandName n -ScriptBlock {\n"
-         "    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)\n"
+  printf("Register-ArgumentCompleter -Native -CommandName n -ScriptBlock {\n"
+         "    param($wordToComplete, $commandAst, $cursorPosition)\n"
          "    $elements = $commandAst.CommandElements\n"
-         "    if ($elements.Count -gt 2 -and $elements[1].Value -ne '-d') { return }\n"
+         "    if ($null -ne $elements -and $elements.Count -gt 2) {\n"
+         "        if (\"$($elements[1])\" -ne '-d') { return }\n"
+         "    }\n"
          "    \n"
          "    if ($wordToComplete -match '^-') {\n"
          "        $flags = @('--list', '--clean', '--init', '--purge', '--add', '-d')\n"
@@ -73,11 +74,12 @@ void init(void) {
          "            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $_)\n"
          "        }\n"
          "    } else {\n"
-         "        $files = n --comp \"$wordToComplete\" 2>$null\n"
-         "        if ($null -ne $files) {\n"
-         "            $files | ForEach-Object {\n"
-         "                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)\n"
-         "            }\n"
+         "        $files = @(n --comp \"$wordToComplete\" 2>$null) | Where-Object { [string]::IsNullOrWhiteSpace($_) -eq $false } | Select-Object -Unique\n"
+         "        \n"
+         "        $files | ForEach-Object {\n"
+         "            $clean = $_.Trim()\n"
+         "            $compText = if ($clean -match '\\s') { \"'$clean'\" } else { $clean }\n"
+         "            [System.Management.Automation.CompletionResult]::new($compText, $clean, 'ParameterValue', $clean)\n"
          "        }\n"
          "    }\n"
          "}\n\n");
