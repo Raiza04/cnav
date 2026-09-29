@@ -66,7 +66,6 @@ By seamlessly integrating with your shell (Bash, Zsh, or PowerShell), CNav remem
   > export PATH="$PATH:/path/to/cnav/build"
   > eval "$(n --init)"
   > ```
-  > **Note**: If you have any issues with aliases then try to move the `eval` line before you declare any alias.
   >
   > You have to restart the terminal or source the shell profile again (e.g. `source ~/.bashrc`) no matter which method you use.
 
@@ -135,6 +134,8 @@ code
 xdg-open
 open
 ```
+> ⚠️ **WARNING**: If you have aliases for some tools please write the actual name for it in the `tools.txt`. For example if you defined `v` for `vim` then write vim in tool.txt. <br>
+> You can use your aliase in your normal shell. CNav will be able to catch those since the shell executes the actual program in the background.
 
 ---
 
