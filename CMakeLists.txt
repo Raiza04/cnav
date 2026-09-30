@@ -72,3 +72,21 @@ if(UNIX)
 else()
   target_link_libraries(n PRIVATE Threads::Threads)
 endif()
+
+
+# ==============================================================================
+# 5. Testing
+# ==============================================================================
+enable_testing()
+
+add_executable(test_search tests/test_search.c src/platform.c src/sqlite3.c)
+
+target_include_directories(test_search PRIVATE inc)
+
+if(UNIX)
+  target_link_libraries(test_search PRIVATE Threads::Threads dl)
+else()
+  target_link_libraries(test_search PRIVATE Threads::Threads)
+endif()
+
+add_test(NAME SearchTest COMMAND test_search)

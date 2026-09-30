@@ -83,8 +83,6 @@ entry search(char *wantedFile) {
     return result;
   }
 
-  // Wir lassen SQL grob vorfiltern: 'LIKE' ist case-insensitive und sucht
-  // Teilstrings
   const char *sql =
       "SELECT path, name, program, callNo, lastCall FROM history; ";
 
@@ -170,7 +168,7 @@ entry search(char *wantedFile) {
     if (currScore > maxScore) {
       maxScore = currScore;
 
-      // finalEntry überschreiben (ersetzt dein altes findMax)
+      // Overwrite finalEntry (replace the old findMax)
       strncpy(result.path, path, sizeof(result.path) - 1);
       result.path[sizeof(result.path) - 1] = '\0';
 
