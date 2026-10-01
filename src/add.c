@@ -33,19 +33,23 @@ void add(char *tmp_path, Prog program) {
     char *resolved_dir = realpath(dir, NULL);
 
     if (resolved_dir != NULL) {
-      path = malloc(strlen(resolved_dir) + strlen(base) + 2);
+      size_t buffer_size = strlen(resolved_dir) + strlen(base) + 2;
+
+      path = malloc(buffer_size);
       if (path != NULL) {
         size_t dir_len = strlen(resolved_dir);
 
         if (dir_len > 0 && (resolved_dir[dir_len - 1] == '/' ||
                             resolved_dir[dir_len - 1] == '\\')) {
-          ret = sprintf(path, "%s%s", resolved_dir, base);
+          ret = snprintf(path, buffer_size, "%s%s", resolved_dir, base);
         } else {
-          ret = sprintf(path, "%s" PATH_SEP "%s", resolved_dir, base);
+          ret = snprintf(path, buffer_size, "%s" PATH_SEP "%s", resolved_dir,
+                         base);
         }
 
-        if (ret < 0 || (size_t)ret >= (strlen(resolved_dir) + strlen(base))) {
+        if (ret < 0 || (size_t)ret >= buffer_size) {
           perror("Failed to resolve the provided path to add");
+          free(path);
           return;
         }
       }

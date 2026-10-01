@@ -90,3 +90,25 @@ else()
 endif()
 
 add_test(NAME SearchTest COMMAND test_search)
+
+# ==========================================
+# Database Integration Tests
+# ==========================================
+add_executable(test_database
+    tests/test_database.c
+    src/search.c
+    src/add.c
+    src/init.c
+    src/clean.c
+    src/sqlite3.c
+)
+
+target_include_directories(test_database PRIVATE inc)
+
+if(UNIX)
+  target_link_libraries(test_database PRIVATE Threads::Threads dl)
+else()
+  target_link_libraries(test_database PRIVATE Threads::Threads)
+endif()
+
+add_test(NAME DatabaseTest COMMAND test_database)

@@ -44,5 +44,22 @@ int main(void) {
   // Tests for Score calculation
   // ==========================================
 
+  // Test 1: Faktor Time:
+  assert(calcScore((CallNo){1}, (Distance){0}, (LastCall){1}) <
+             calcScore((CallNo){1}, (Distance){0}, (LastCall){2}) &&
+         "Newer files should have a higher score than older files");
+
+  // Test 2: Faktor the number of called times
+  assert(calcScore((CallNo){1}, (Distance){0}, (LastCall){1}) <
+             calcScore((CallNo){2}, (Distance){0}, (LastCall){1}) &&
+         "Files that are called more often shoulg have higher score than those "
+         "that are called less");
+
+  // Test 3: Faktor Penalty application
+  assert(calcScore((CallNo){1}, (Distance){1}, (LastCall){1}) <
+             calcScore((CallNo){1}, (Distance){0}, (LastCall){1}) &&
+         "Files that have higher distance (levenshtein) Should have a higher "
+         "score than those with a smaller distance");
+
   return 0;
 }

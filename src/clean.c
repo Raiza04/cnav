@@ -64,7 +64,9 @@ void clean_database(void) {
   sqlite3_finalize(stmt_delete);
   sqlite3_close(db);
 
-  printf("Cleanup finished! %d entries deleted.\n", removed_count);
+  printf(ANSI_COLOR_GREEN
+         "Cleanup finished! %d entries deleted.\n" ANSI_COLOR_RESET,
+         removed_count);
 }
 
 void purge(void) {
@@ -94,7 +96,7 @@ void purge(void) {
     (void)fprintf(stderr, "Error: Failed to execute purge: %s\n", errmsg);
     sqlite3_free(errmsg);
   } else {
-    printf("Database successfully emptied\n");
+    printf(ANSI_COLOR_GREEN "Database successfully emptied\n" ANSI_COLOR_RESET);
   }
 
   sqlite3_close(db);
@@ -129,7 +131,8 @@ void delete_entry(char *line) {
     printf("Operation canceled\n"
            "Note: If " ANSI_COLOR_RED "%s" ANSI_COLOR_RESET
            " is not the one you want to delete try to enter the "
-           "whole name or path instead of %s\n",
+           "whole name or path instead of" ANSI_COLOR_RED
+           "%s\n" ANSI_COLOR_RESET,
            match.path, line);
     return;
   }
@@ -205,13 +208,12 @@ void comp(char *wanted) {
 
   if (sqlite3_bind_text(stmt, 1, search_pattern, -1, SQLITE_TRANSIENT) !=
       SQLITE_OK) {
-    sqlite3_finalize(stmt); // Hier fehlte das finalize
+    sqlite3_finalize(stmt);
     sqlite3_close(db);
     return;
   }
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
-    // FEHLER 5 BEHOBEN: Spalte 0 abfragen
     const char *name = (const char *)sqlite3_column_text(stmt, 0);
     printf("%s\n", name);
   }

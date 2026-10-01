@@ -129,16 +129,16 @@ entry search(char *wantedFile) {
       size_t diff = len_name - len_wanted;
       d.value = d.value - (int)diff;
 
-      int maxAllowed = 0;
+      int maxAllowed = 1;
 
       if (len_wanted <= 3) {
-        maxAllowed = 0;
-      } else if (len_wanted <= 6) {
         maxAllowed = 1;
-      } else if (len_wanted <= 10) {
+      } else if (len_wanted <= 6) {
         maxAllowed = 2;
-      } else {
+      } else if (len_wanted <= 10) {
         maxAllowed = 3;
+      } else {
+        maxAllowed = 4;
       }
 
       if (d.value > maxAllowed) {
